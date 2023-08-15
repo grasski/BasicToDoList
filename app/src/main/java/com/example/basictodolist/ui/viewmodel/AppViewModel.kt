@@ -1,6 +1,5 @@
 package com.example.basictodolist.ui.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.basictodolist.db.Group
@@ -64,6 +63,14 @@ class AppViewModel @Inject constructor(
             repository.upsertTask(task)
         }
     }
+    fun finishOrResetAllGroupTasks(tasks: List<Task>?, status: Boolean){
+        viewModelScope.launch {
+            tasks?.forEach {
+                it.finished = status
+                updateTaskStatus(it)
+            }
+        }
+    }
 
     fun setWorkingTaskId(id: Int?){
         _workingTaskId.update { id }
@@ -75,9 +82,16 @@ class AppViewModel @Inject constructor(
             repository.upsertGroup(group)
         }
     }
-    fun deleteGroup(group: Group){
+    fun deleteGroup(group: Group, tasks: List<Task>?){
         viewModelScope.launch {
-            repository.deleteGroup(group)
+            tasks?.forEach {
+                deleteTask(it)
+            }
+            setSelectedGroup(null)
+        }.invokeOnCompletion {
+            viewModelScope.launch {
+                repository.deleteGroup(group)
+            }
         }
     }
     fun changeColor(id: Int){
