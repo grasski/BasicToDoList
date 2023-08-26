@@ -1,5 +1,6 @@
 package com.example.basictodolist.ui.viewmodel
 
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.basictodolist.db.Group
@@ -36,16 +37,11 @@ class AppViewModel @Inject constructor(
     private val _workingTaskId = MutableStateFlow<Int?>(null)
     val workingTaskId = _workingTaskId.asStateFlow()
 
+
     fun createUpdateTask(task: Task) {
-        _workingTaskId.value?.let {
-            task.id = it
-        }
-
-        if (task.taskText.replace(" ", "").isNotEmpty()){
+        if (task.taskText.isNotBlank()){
             viewModelScope.launch {
-                val id = repository.upsertTask(task)
-
-                _workingTaskId.value?.let {} ?: _workingTaskId.update { id.toInt() }
+                repository.upsertTask(task)
             }
         } else{
             deleteTask(task)
@@ -77,10 +73,12 @@ class AppViewModel @Inject constructor(
     }
 
 
-    fun createUpdateGroup(group: Group) {
+    suspend fun createUpdateGroup(group: Group): Long? {
+        var id: Long? = null
         viewModelScope.launch {
-            repository.upsertGroup(group)
-        }
+            id = repository.upsertGroup(group)
+        }.join()
+        return id
     }
     fun deleteGroup(group: Group, tasks: List<Task>?){
         viewModelScope.launch {

@@ -3,17 +3,22 @@ package com.example.basictodolist.animations
 
 import android.util.Log
 import androidx.compose.animation.*
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -104,6 +109,26 @@ fun ShrinkInFromHorizontallySide(offsetX: Int, duration: Int, targetState: Boole
 }
 
 @Composable
+fun ShrinkInFromVerticalSide(offsetY: Int, duration: Int, targetState: Boolean=true, content: @Composable () -> Unit){
+    val visibleState = remember { MutableTransitionState(!targetState) }
+    visibleState.targetState = targetState
+
+    AnimatedVisibility(
+        visibleState = visibleState,
+        enter = slideInVertically(
+            animationSpec = tween(durationMillis = duration),
+            initialOffsetY = { offsetY }
+        ),
+        exit = slideOutVertically(
+            animationSpec = tween(durationMillis = duration / 2),
+            targetOffsetY = { offsetY }
+        )
+    ) {
+        content()
+    }
+}
+
+@Composable
 fun ScreensCrossFade(
     targetState: Boolean,
     duration: Int,
@@ -118,6 +143,25 @@ fun ScreensCrossFade(
             trueScreen()
         } else {
             falseScreen()
+        }
+    }
+}
+
+
+@Composable
+fun AnimatedTextScrolling(scroll: ScrollState){
+    var scrollTarget by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(scroll.value){
+        if (scroll.value == scrollTarget || scroll.value == scrollTarget - scroll.maxValue) {
+            scrollTarget = if (scrollTarget == 0) scroll.maxValue + scroll.maxValue else 0
+            delay(3000)
+        }
+        if (scrollTarget == 0) {
+            scroll.animateScrollTo(0, tween(200, easing = LinearEasing))
+            delay(3000)
+        } else{
+            scroll.animateScrollTo(scrollTarget, tween(3500, easing = LinearEasing))
         }
     }
 }

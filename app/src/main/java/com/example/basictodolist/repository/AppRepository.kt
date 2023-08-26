@@ -24,7 +24,7 @@ class AppRepository(private val dbDao: DatabaseDao) {
 
 
     @WorkerThread
-    suspend fun upsertGroup(group: Group) = dbDao.upsertGroup(group)
+    suspend fun upsertGroup(group: Group): Long = dbDao.upsertGroup(group)
     @WorkerThread
     suspend fun deleteGroup(group: Group) = dbDao.deleteGroup(group)
 

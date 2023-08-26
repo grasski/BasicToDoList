@@ -1,19 +1,13 @@
-package com.example.basictodolist.ui
+package com.example.basictodolist.ui.groups
 
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -38,7 +32,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -47,8 +40,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -56,12 +47,8 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.DismissDirection
-import androidx.compose.material3.DismissState
 import androidx.compose.material3.DismissValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -70,19 +57,14 @@ import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.SwipeToDismiss
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.rememberDismissState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,7 +74,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Brush
@@ -107,7 +88,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -115,10 +95,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.example.basictodolist.Keyboard
 import com.example.basictodolist.R
+import com.example.basictodolist.animations.AnimatedTextScrolling
 import com.example.basictodolist.animations.FadeInFromHorizontallySide
 import com.example.basictodolist.animations.FadeInFromVerticallySide
 import com.example.basictodolist.animations.ScaleIn
-import com.example.basictodolist.db.Group
 import com.example.basictodolist.db.GroupWithTasks
 import com.example.basictodolist.db.Task
 import com.example.basictodolist.keyboardAsState
@@ -128,80 +108,66 @@ import kotlinx.coroutines.launch
 
 
 @Composable
-fun MainTasksScreen() {
-    LocalContext.current
+fun GroupsScreen() {
     val viewModel: AppViewModel = hiltViewModel()
-
-    val allTasks by viewModel.allTasks.collectAsStateWithLifecycle()
     val groupWithTasks by viewModel.groupWithTasks.collectAsStateWithLifecycle()
 
     val lazyState = rememberLazyListState()
+    groupWithTasks?.let { g ->
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .padding(12.dp)){
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                state = lazyState,
+                modifier = Modifier.clip(RoundedCornerShape(40.dp))
+            ){
+                items(g.reversed()){ grpt ->
+                    GroupView(
+                        groupWithTasks = grpt,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = 2.dp)
+                    )
+                }
+            }
+        }
+    }
+}
 
+@Composable
+fun SelectedGroupScreen() {
+    val viewModel: AppViewModel = hiltViewModel()
+    val groupWithTasks by viewModel.groupWithTasks.collectAsStateWithLifecycle()
     val selectedGroupId by viewModel.selectedGroupId.collectAsStateWithLifecycle()
 
-    Crossfade(targetState = selectedGroupId) {selectedId ->
-        if (selectedId == null){
-            Column(
-                Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-            ){
-                Text("Hello, Jiří")
-                Text("Groups (${groupWithTasks?.size ?: 0})", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text("Tasks (${allTasks?.size ?: 0})", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text("VYBRANY: $selectedGroupId")
-
-                Button(onClick = {
-                    viewModel.createUpdateGroup(Group("GROUP Of HOLIDAYS"))
-                }){
-                    Text("New group")
-                }
-
-
-                groupWithTasks?.let { g ->
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
-                        state = lazyState,
-                        modifier = Modifier.clip(RoundedCornerShape(40.dp))
-                    ){
-                        items(g.reversed()){ grpt ->
-                            GlobalGroupView(
-                                groupWithTasks = grpt,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(vertical = 2.dp)
-                            )
-                        }
+    if (selectedGroupId != null) {
+        Box(modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+        ){
+            ScaleIn(
+                400,
+                content = {
+                    val selectedGroup = groupWithTasks?.find {
+                        it.group.id == selectedGroupId
+                    }
+                    selectedGroup?.let {
+                        GroupView(
+                            groupWithTasks = it,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight(0.4f)
+                                .animateContentSize(animationSpec = tween(durationMillis = 3000)),
+                            true
+                        )
                     }
                 }
-            }
-        } else{
-            Box(modifier = Modifier
-                .fillMaxSize()
-            ){
-                ScaleIn(
-                    400,
-                    content = {
-                        val selectedGroup = groupWithTasks?.find {
-                            it.group.id == selectedId
-                        }
-                        selectedGroup?.let {
-                            GlobalGroupView(
-                                groupWithTasks = it,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .fillMaxHeight(0.4f)
-                                    .animateContentSize(animationSpec = tween(durationMillis = 3000)),
-                                true
-                            )
-                        }
-                    }
-                )
-            }
+            )
+        }
 
-            BackHandler(true) {
-                viewModel.setSelectedGroup(null)
-            }
+        BackHandler(true) {
+            viewModel.setSelectedGroup(null)
         }
     }
 }
@@ -209,7 +175,7 @@ fun MainTasksScreen() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun GlobalGroupView(
+fun GroupView(
     groupWithTasks: GroupWithTasks,
     modifier: Modifier,
     focused: Boolean = false
@@ -301,7 +267,10 @@ fun GlobalGroupView(
                             value = groupName,
                             onValueChange = {
                                 groupName = it
-                                viewModel.createUpdateGroup(groupWithTasks.group.copy(name = it))
+                                viewModel.viewModelScope.launch {
+
+                                    viewModel.createUpdateGroup(groupWithTasks.group.copy(name = it))
+                                }
                             },
                             interactionSource = remember { MutableInteractionSource() }
                                 .also { interactionSource ->
@@ -510,7 +479,7 @@ fun GlobalGroupView(
                 ){
                     if (groupWithTasks.tasks.none { !it.finished } && groupWithTasks.tasks.isNotEmpty()){
                         item{
-                            TasksCompletedSwitcher(
+                            TasksCompletedShowSwitcher(
                                 groupWithTasks.tasks.filter { it.finished }.size,
                                 showCompleted
                             ) { showCompleted = it }
@@ -546,13 +515,12 @@ fun GlobalGroupView(
                                 index == groupWithTasks.tasks.filter { !it.finished }.size-1 &&
                                         !groupWithTasks.tasks.none { it.finished }
                             ){
-                                TasksCompletedSwitcher(
+                                TasksCompletedShowSwitcher(
                                     groupWithTasks.tasks.filter { it.finished }.size,
                                     showCompleted
                                 ) { showCompleted = it }
                             }
                         }
-
                     }
                 }
 
@@ -561,153 +529,6 @@ fun GlobalGroupView(
                 }
             }
         }
-    }
-}
-
-
-enum class GroupMenuEvents{
-    RESET_ALL_TASKS, FINISH_ALL_TASKS, DELETE_GROUP
-}
-@Composable
-fun GroupMenuAlertDialog(
-    group: Group,
-    tasks: List<Task>?,
-    event: GroupMenuEvents?,
-    textsId: Int,
-    openState: (Boolean) -> Unit
-) {
-    val viewModel: AppViewModel = hiltViewModel()
-    val context = LocalContext.current
-    val texts = context.resources.getStringArray(textsId)
-
-    AlertDialog(
-        onDismissRequest = {
-            openState(false)
-        },
-        title = {
-            Text(text = texts[0])
-        },
-        text = {
-            Text(text = texts[1])
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    event?.let {
-                        when(it){
-                            GroupMenuEvents.RESET_ALL_TASKS -> { viewModel.finishOrResetAllGroupTasks(tasks, false) }
-                            GroupMenuEvents.FINISH_ALL_TASKS -> { viewModel.finishOrResetAllGroupTasks(tasks, true) }
-                            GroupMenuEvents.DELETE_GROUP -> { viewModel.deleteGroup(group, tasks) }
-                        }
-                    }
-                    openState(false)
-                }
-            ) {
-                Text(context.resources.getString(R.string.confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    openState(false)
-                }
-            ) {
-                Text(context.resources.getString(R.string.dismiss))
-            }
-        }
-    )
-}
-
-
-@Composable
-fun ShowTasksStatusOfGroup(tasks: List<Task>?) {
-    var finishedTasks by remember { mutableIntStateOf(0) }
-    var totalTasks by remember { mutableIntStateOf(0) }
-    var progress by remember { mutableFloatStateOf(0f) }
-
-    tasks?.let {
-        finishedTasks = tasks.count { it.finished }
-        totalTasks = tasks.size
-        progress =finishedTasks.toFloat() / totalTasks.toFloat()
-    }
-
-
-    Row(
-        modifier = Modifier.height(70.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ){
-        if (totalTasks == 0){
-            Text(
-                "No tasks found.",
-                textAlign = TextAlign.Center,
-                fontSize = 30.sp
-            )
-        } else{
-            Box(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(22.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(2.dp, Color.White, RoundedCornerShape(16.dp))
-                    .background(Color.Transparent)
-                    .rotate(180f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight(progress)
-                        .fillMaxWidth()
-                        .background(Color.Green, shape = RoundedCornerShape(16.dp))
-                        .rotate(180f)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-            Column(
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxHeight()
-            ) {
-                Text(
-                    text = "$finishedTasks/$totalTasks",
-                    textAlign = TextAlign.Center,
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Text(text = "tasks", fontSize = 18.sp)
-            }
-        }
-    }
-}
-
-
-@Composable
-fun TaskView(task: Task) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp)
-            .border(2.dp, MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp))
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-
-    ) {
-        OutlinedButton(
-            onClick = { /*TODO*/ },
-            modifier= Modifier.size(40.dp),  //avoid the oval shape
-            shape = CircleShape,
-            border= BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor =  MaterialTheme.colorScheme.onPrimary)
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "content description", modifier = Modifier.fillMaxSize())
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Text(
-            text = task.taskText,
-            fontWeight = FontWeight.Bold
-        )
     }
 }
 
@@ -743,6 +564,10 @@ fun CreateNewGroupTask(groupId: Int, showKeyboard: Boolean = false, showKeyb: (B
         showKeyb(isKeyboardOpen.name == Keyboard.Opened.name)   // Listening for HW Back button
         if (isKeyboardOpen.name != Keyboard.Opened.name){
             viewModel.setWorkingTaskId(null)
+            newTaskText = TextFieldValue(
+                text = "",
+                selection = TextRange(0)
+            )
         }
     }
 
@@ -830,7 +655,7 @@ fun FocusedGroupTaskView(task: Task, showKeyb: (Boolean) -> Unit) {
         state = dismissState,
         modifier = Modifier,
         background = {
-            DismissBackground(dismissState)
+            SwipeDeleteGroupTaskBackground(dismissState)
         },
         directions = setOf(DismissDirection.EndToStart),
         dismissContent = {
@@ -902,89 +727,4 @@ fun FocusedGroupTaskView(task: Task, showKeyb: (Boolean) -> Unit) {
             }
         }
     )
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DismissBackground(dismissState: DismissState) {
-    val thresholdReached by remember {
-        derivedStateOf {
-            dismissState.targetValue == DismissValue.DismissedToStart
-        }
-    }
-    val color = when (dismissState.dismissDirection) {
-        DismissDirection.EndToStart -> {
-            if (thresholdReached) Color(0xFFFF1744) else MaterialTheme.colorScheme.errorContainer
-        }
-        else -> {Color.Transparent}
-    }
-    val direction = dismissState.dismissDirection
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize(),
-        contentAlignment = Alignment.CenterEnd
-    ){
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color)
-                .padding(15.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.End
-        ) {
-            if (direction == DismissDirection.EndToStart){
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "delete",
-                )
-            }
-        }
-    }
-}
-
-
-@Composable
-fun TasksCompletedSwitcher(completedTasks: Int, showStatus: Boolean, showCompleted: (Boolean) -> Unit) {
-    Row(modifier = Modifier
-        .fillMaxWidth()
-        .clickable(
-            remember { MutableInteractionSource() },
-            null,
-            onClick = { showCompleted(!showStatus) }
-        )
-        .height(50.dp)
-        .padding(10.dp, vertical = 15.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ){
-        Text(
-            text = "COMPLETED ($completedTasks)",
-            color = Color.LightGray.copy(alpha = 0.8f),
-        )
-        Icon(
-            imageVector = if(!showStatus) { Icons.Default.ArrowDropUp } else Icons.Default.ArrowDropDown,
-            contentDescription = null,
-            tint = Color.LightGray.copy(alpha = 0.8f)
-        )
-    }
-}
-
-
-@Composable
-fun AnimatedTextScrolling(scroll: ScrollState){
-    var scrollTarget by remember { mutableIntStateOf(0) }
-
-    LaunchedEffect(scroll.value){
-        if (scroll.value == scrollTarget || scroll.value == scrollTarget - scroll.maxValue) {
-            scrollTarget = if (scrollTarget == 0) scroll.maxValue + scroll.maxValue else 0
-            delay(3000)
-        }
-        if (scrollTarget == 0) {
-            scroll.animateScrollTo(0, tween(200, easing = LinearEasing))
-            delay(3000)
-        } else{
-            scroll.animateScrollTo(scrollTarget, tween(3500, easing = LinearEasing))
-        }
-    }
 }

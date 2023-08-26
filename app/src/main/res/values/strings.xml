@@ -4,17 +4,21 @@
     <string name="confirm">Confirm</string>
     <string name="dismiss">Dismiss</string>
 
+    <string name="tasks">tasks</string>
+    <string name="noTasks">No tasks found.</string>
+    <string name="tasksCompleted">COMPLETED (%1$d)</string>
+
 
     <string name="resetTasks">Reset all tasks</string>
     <string-array name="GroupAlertsReset">
         <item>Reset tasks</item>
-        <item>This operation will set all the tasks that belong to this group to <b>unfinished</b> state. Do you really want to continue?</item>
+        <item>This operation will set all the tasks that belong to this group to unfinished state. Do you really want to continue?</item>
     </string-array>
 
     <string name="finishTasks">Finish all tasks</string>
     <string-array name="GroupAlertsFinishAll">
         <item>Finish tasks</item>
-        <item>This operation will set all the tasks that belong to this group to <b>finished</b> state. Do you really want to continue?</item>
+        <item>This operation will set all the tasks that belong to this group to finished state. Do you really want to continue?</item>
     </string-array>
 
     <string name="deleteGroup">Delete group</string>

@@ -25,7 +25,7 @@ interface DatabaseDao {
 
 
     @Upsert
-    suspend fun upsertGroup(group: Group)
+    suspend fun upsertGroup(group: Group): Long
 
     @Delete
     suspend fun deleteGroup(group: Group)
