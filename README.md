@@ -10,5 +10,6 @@ Created using Kotlin and Jetpack Compose, Room and Dagger Hilt.
 
 https://github.com/grasski/BasicToDoList/assets/34042457/5e94a422-383e-4eec-87a0-39890c328c35
 
-https://github.com/grasski/BasicToDoList/assets/34042457/2dbdd709-5cca-4827-8441-4b49780d2b8f
+
+https://github.com/grasski/BasicToDoList/assets/34042457/4b2c0317-0092-4170-a3b9-50ef2ca5f405
 
