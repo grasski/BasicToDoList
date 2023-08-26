@@ -1,4 +1,4 @@
-# Basic ToDo application
+# Basic ToDo list application
 Inspired by: https://dribbble.com/shots/21236436-To-Do-List-Mobile-App-Design.<br/>
 Created using Kotlin and Jetpack Compose, Room and Dagger Hilt.
 
