@@ -4,12 +4,12 @@ Created using Kotlin and Jetpack Compose, Room and Dagger Hilt.
 
 ## Example
 
-
-![readme_1](https://github.com/grasski/BasicToDoList/assets/34042457/c31ff578-b019-4c6a-8d88-3c4b678f5352)
-
-
-https://github.com/grasski/BasicToDoList/assets/34042457/5e94a422-383e-4eec-87a0-39890c328c35
+![readme_1](https://github.com/grasski/BasicToDoList/assets/34042457/27db69bd-bc7e-43f5-9275-6bb5811734d9)
 
 
-https://github.com/grasski/BasicToDoList/assets/34042457/4b2c0317-0092-4170-a3b9-50ef2ca5f405
+https://github.com/grasski/BasicToDoList/assets/34042457/ff76fb85-e765-4c96-b41d-fae85d474003
+
+
+https://github.com/grasski/BasicToDoList/assets/34042457/72e76988-88e9-4ae3-9354-cb2683b46ac4
+
 
